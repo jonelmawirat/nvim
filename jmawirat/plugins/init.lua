@@ -17,3 +17,4 @@ end
 M.plugins = load_plugins()
 
 return M.plugins
+

@@ -2,7 +2,6 @@ local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 
 -- Auto-install lazy.nvim if not present
 if not vim.loop.fs_stat(lazypath) then
-  print('Installing lazy.nvim....')
   vim.fn.system({
     'git',
     'clone',
@@ -14,7 +13,6 @@ if not vim.loop.fs_stat(lazypath) then
 end
 
 vim.opt.rtp:prepend(lazypath)
-vim.cmd.colorscheme('habamax')
 
 -- Set space as the leader key
 vim.g.mapleader = " "
@@ -32,5 +30,4 @@ require('jmawirat.remaps')
 
 -- Load configurations
 require('jmawirat.config')
-
 
