@@ -31,3 +31,8 @@ vim.api.nvim_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', { no
 -- Go back
 vim.api.nvim_set_keymap('n', '<C-o>', '<C-o>', { noremap = true, silent = true })
 
+-- Insert this autocommand to center the cursor line on InsertEnter
+vim.cmd [[autocmd InsertEnter * norm zz]]
+
+-- Disable Ctrl+Z suspend in Neovim
+vim.keymap.set('', '<C-z>', '<Nop>')
