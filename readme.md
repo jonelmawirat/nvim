@@ -116,17 +116,3 @@ To update plugins, run the following command inside Neovim:
 ```
 
 This will pull the latest versions of your installed plugins and update the `lazy-lock.json` file accordingly.
-
-## Contributing
-
-If you’d like to contribute to this configuration, feel free to:
-
-1. Fork the repository
-2. Create a feature branch
-3. Open a Pull Request
-
-Any suggestions or improvements are welcome!
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
