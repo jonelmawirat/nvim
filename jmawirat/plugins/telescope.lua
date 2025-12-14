@@ -1,11 +1,21 @@
 return {
-    'nvim-telescope/telescope.nvim', 
-    tag = '0.1.6',  -- or branch = '0.1.x'
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = function()
-        require('telescope').setup {
-            -- Your configuration options here
-        }
-    end
-}
+	"nvim-telescope/telescope.nvim",
+	tag = "0.1.6",
+	dependencies = { "nvim-lua/plenary.nvim" },
+	config = function()
+		local actions = require("telescope.actions")
 
+		require("telescope").setup({
+			defaults = {
+				mappings = {
+					i = {
+						["<CR>"] = actions.select_default,
+					},
+					n = {
+						["<CR>"] = actions.select_default,
+					},
+				},
+			},
+		})
+	end,
+}

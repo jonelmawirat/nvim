@@ -38,6 +38,43 @@ return {
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
 
+      local function set_inlay_hints(bufnr, enabled)
+        if vim.lsp.inlay_hint == nil then
+          return
+        end
+        local ok = pcall(function()
+          if type(vim.lsp.inlay_hint) == "function" then
+            vim.lsp.inlay_hint(bufnr, enabled)
+          elseif type(vim.lsp.inlay_hint) == "table" and type(vim.lsp.inlay_hint.enable) == "function" then
+            vim.lsp.inlay_hint.enable(bufnr, enabled)
+          end
+        end)
+      end
+
+      local function maybe_enable_inlay_hints(client, bufnr)
+        if not client.server_capabilities or not client.server_capabilities.inlayHintProvider then
+          return
+        end
+        local ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
+        if ft == "go" or ft == "rust" or ft == "typescript" or ft == "typescriptreact" then
+          vim.b[bufnr].inlay_hints_enabled = true
+          set_inlay_hints(bufnr, true)
+        end
+      end
+
+      vim.api.nvim_create_user_command("LspToggleInlayHints", function()
+        local bufnr = vim.api.nvim_get_current_buf()
+        local enabled = vim.b.inlay_hints_enabled
+        if enabled == nil then
+          enabled = false
+        end
+        enabled = not enabled
+        vim.b.inlay_hints_enabled = enabled
+        set_inlay_hints(bufnr, enabled)
+      end, {})
+
+      vim.keymap.set("n", "<leader>li", "<cmd>LspToggleInlayHints<CR>", { noremap = true, silent = true })
+
       local function on_attach(client, bufnr)
         local opts = { buffer = bufnr, silent = true, noremap = true }
         local map = vim.keymap.set
@@ -51,6 +88,10 @@ return {
         map("n", "<space>f", function()
           vim.lsp.buf.format({ async = true })
         end, opts)
+        map("n", "<leader>lf", function()
+          vim.lsp.buf.format({ async = true })
+        end, opts)
+        maybe_enable_inlay_hints(client, bufnr)
       end
 
       local function make_config(server_config)
@@ -129,6 +170,15 @@ return {
             name = "gopls",
             cmd = { "gopls" },
             root_dir = root_dir,
+            settings = {
+              gopls = {
+                completeUnimported = true,
+                usePlaceholders = true,
+                analyses = {
+                  unusedparams = true,
+                },
+              },
+            },
           })
           vim.lsp.start(config)
         end,
@@ -163,6 +213,47 @@ return {
             root_dir = root_dir,
           })
           vim.lsp.start(config)
+        end,
+      })
+
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        pattern = { "*.go", "*.rs", "*.lua", "*.ts", "*.tsx", "*.js", "*.jsx", "*.py", "*.proto" },
+        callback = function(args)
+          local bufnr = args.buf
+          local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+          if not clients or #clients == 0 then
+            return
+          end
+          local has_formatter = false
+          for _, client in ipairs(clients) do
+            if client.server_capabilities and client.server_capabilities.documentFormattingProvider then
+              has_formatter = true
+              break
+            end
+          end
+          if not has_formatter then
+            return
+          end
+          local ft = vim.bo[bufnr].filetype
+          vim.lsp.buf.format({
+            bufnr = bufnr,
+            timeout_ms = 2000,
+            filter = function(client)
+              if ft == "lua" then
+                return client.name == "lua_ls"
+              end
+              if ft == "go" then
+                return client.name == "gopls"
+              end
+              if ft == "rust" then
+                return client.name == "rust_analyzer"
+              end
+              if ft == "proto" then
+                return client.name == "buf_ls"
+              end
+              return true
+            end,
+          })
         end,
       })
     end,
